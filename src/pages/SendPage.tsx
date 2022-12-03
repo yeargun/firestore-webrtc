@@ -1,10 +1,8 @@
-import React from "react";
 import { initializeApp } from "firebase/app";
 import {
   getFirestore,
   collection,
   addDoc,
-  getDocs,
   doc,
   setDoc,
   onSnapshot,
@@ -14,12 +12,12 @@ import {
 } from "firebase/firestore";
 
 import { DropzoneArea } from "material-ui-dropzone";
-import { useState } from "react";
+import { useState, React } from "react";
 import { Button } from "@mui/material";
 
 // 2. create an offer
 const createOffer = async (pc: RTCPeerConnection, db: Firestore) => {
-  const testCallName = (Math.random() * 1000).toString();
+  const testCallName = Math.floor(Math.random() * 10000).toString();
   const callDoc = doc(db, "calls", testCallName);
   const offerCandidatesRef = collection(callDoc, "offerCandidates");
   const answerCandidatesRef = collection(callDoc, "answerCandidates");
@@ -36,7 +34,9 @@ const createOffer = async (pc: RTCPeerConnection, db: Firestore) => {
     type: offerDescription.type,
   };
 
-  setDoc(callDoc, offer);
+  console.log("created offer:", offer);
+
+  setDoc(callDoc, { offer });
 
   // Listen for remote answer
   onSnapshot(callDoc, (doc) => {
@@ -58,44 +58,44 @@ const createOffer = async (pc: RTCPeerConnection, db: Firestore) => {
   });
 };
 
-const answerTranfer = async (
-  pc: RTCPeerConnection,
-  db: Firestore,
-  callId: string
-) => {
-  const callDoc = doc(db, "calls", callId);
-  const offerCandidatesRef = collection(callDoc, "offerCandidates");
-  const answerCandidatesRef = collection(callDoc, "answerCandidates");
+// const answerTranfer = async (
+//   pc: RTCPeerConnection,
+//   db: Firestore,
+//   callId: string
+// ) => {
+//   const callDoc = doc(db, "calls", callId);
+//   const offerCandidatesRef = collection(callDoc, "offerCandidates");
+//   const answerCandidatesRef = collection(callDoc, "answerCandidates");
 
-  pc.onicecandidate = (event) => {
-    event.candidate && addDoc(answerCandidatesRef, event.candidate.toJSON());
-  };
+//   pc.onicecandidate = (event) => {
+//     event.candidate && addDoc(answerCandidatesRef, event.candidate.toJSON());
+//   };
 
-  const callData = (await getDoc(callDoc)).data();
+//   const callData = (await getDoc(callDoc)).data();
 
-  const offerDescription = callData.offer;
-  await pc.setRemoteDescription(new RTCSessionDescription(offerDescription));
+//   const offerDescription = callData.offer;
+//   await pc.setRemoteDescription(new RTCSessionDescription(offerDescription));
 
-  const answerDescription = await pc.createAnswer();
-  await pc.setLocalDescription(answerDescription);
+//   const answerDescription = await pc.createAnswer();
+//   await pc.setLocalDescription(answerDescription);
 
-  const answer = {
-    type: answerDescription.type,
-    sdp: answerDescription.sdp,
-  };
+//   const answer = {
+//     type: answerDescription.type,
+//     sdp: answerDescription.sdp,
+//   };
 
-  await updateDoc(callDoc, { answer });
+//   await updateDoc(callDoc, { answer });
 
-  onSnapshot(offerCandidatesRef, (doc) => {
-    doc.docChanges().forEach((change) => {
-      console.log(change);
-      if (change.type === "added") {
-        const data = change.doc.data();
-        pc.addIceCandidate(new RTCIceCandidate(data));
-      }
-    });
-  });
-};
+//   onSnapshot(offerCandidatesRef, (doc) => {
+//     doc.docChanges().forEach((change) => {
+//       console.log(change);
+//       if (change.type === "added") {
+//         const data = change.doc.data();
+//         pc.addIceCandidate(new RTCIceCandidate(data));
+//       }
+//     });
+//   });
+// };
 
 function SendPage() {
   const [toBeUploadedFiles, setToBeUploadedFiles] = useState([]);
@@ -131,42 +131,6 @@ function SendPage() {
   // Initialize Cloud Firestore and get a reference to the service
   const db = getFirestore(app);
 
-  //   // Send any ice candidates to the other peer.
-  //   pc.onicecandidate = ({ candidate }) => signaling.send({ candidate });
-
-  //   // Let the "negotiationneeded" event trigger offer generation.
-  //   pc.onnegotiationneeded = async () => {
-  //     try {
-  //       await pc.setLocalDescription(await pc.createOffer());
-  //       // Send the offer to the other peer.
-  //       signaling.send({ desc: pc.localDescription });
-  //     } catch (err) {
-  //       console.error(err);
-  //     }
-  //   };
-
-  //   // Once remote track media arrives, show it in remote video element.
-  //   pc.ontrack = (event) => {
-  //     // Don't set srcObject again if it is already set.
-  //     if (remoteView.srcObject) return;
-  //     remoteView.srcObject = event.streams[0];
-  //   };
-
-  //   //   pc.onicecandidate({candidate}) => firestore.send({candiate})
-
-  //   dataChannel.addEventListener("open", (event) => {
-  //     console.log("open");
-  //   });
-
-  //   dataChannel.addEventListener("close", (event) => {
-  //     console.log("close");
-  //   });
-  //   pc.addEventListener("datachannel", (event) => {
-  //     console.log("asdas");
-  //     const dataChannel2 = event.channel;
-  //   });
-
-  // dataChannel.send("asdasdas");
   return (
     <>
       <DropzoneArea
@@ -187,14 +151,14 @@ function SendPage() {
       >
         create an offer
       </Button>
-
+      {/* 
       <Button
         onClick={() => {
           answerTranfer(pc, db, "447.5083397859405");
         }}
       >
         answer the call with unique id
-      </Button>
+      </Button> */}
     </>
   );
 }

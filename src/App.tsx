@@ -1,4 +1,4 @@
-import { HashRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 import RecievePage from "./pages/RecievePage";
@@ -8,8 +8,8 @@ function App() {
   return (
     <Routes>
       <Route path="/about" element={<Home />} />
-      <Route path="/revieve" element={<RecievePage />} />
       <Route path="/" element={<SendPage />} />
+      <Route path="/recieve/*" element={<RecievePage />} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>
@@ -18,9 +18,9 @@ function App() {
 
 function WrappedApp() {
   return (
-    <HashRouter>
+    <BrowserRouter>
       <App />
-    </HashRouter>
+    </BrowserRouter>
   );
 }
 
