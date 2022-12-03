@@ -8,6 +8,9 @@ import {
   doc,
   setDoc,
   onSnapshot,
+  Firestore,
+  getDoc,
+  updateDoc,
 } from "firebase/firestore";
 
 import { DropzoneArea } from "material-ui-dropzone";
@@ -15,7 +18,7 @@ import { useState } from "react";
 import { Button } from "@mui/material";
 
 // 2. create an offer
-const createOffer = async (pc: RTCPeerConnection, db) => {
+const createOffer = async (pc: RTCPeerConnection, db: Firestore) => {
   const testCallName = (Math.random() * 1000).toString();
   const callDoc = doc(db, "calls", testCallName);
   const offerCandidatesRef = collection(callDoc, "offerCandidates");
@@ -50,6 +53,45 @@ const createOffer = async (pc: RTCPeerConnection, db) => {
       if (change.type === "added") {
         const candidate = new RTCIceCandidate(change.doc.data());
         pc.addIceCandidate(candidate);
+      }
+    });
+  });
+};
+
+const answerTranfer = async (
+  pc: RTCPeerConnection,
+  db: Firestore,
+  callId: string
+) => {
+  const callDoc = doc(db, "calls", callId);
+  const offerCandidatesRef = collection(callDoc, "offerCandidates");
+  const answerCandidatesRef = collection(callDoc, "answerCandidates");
+
+  pc.onicecandidate = (event) => {
+    event.candidate && addDoc(answerCandidatesRef, event.candidate.toJSON());
+  };
+
+  const callData = (await getDoc(callDoc)).data();
+
+  const offerDescription = callData.offer;
+  await pc.setRemoteDescription(new RTCSessionDescription(offerDescription));
+
+  const answerDescription = await pc.createAnswer();
+  await pc.setLocalDescription(answerDescription);
+
+  const answer = {
+    type: answerDescription.type,
+    sdp: answerDescription.sdp,
+  };
+
+  await updateDoc(callDoc, { answer });
+
+  onSnapshot(offerCandidatesRef, (doc) => {
+    doc.docChanges().forEach((change) => {
+      console.log(change);
+      if (change.type === "added") {
+        const data = change.doc.data();
+        pc.addIceCandidate(new RTCIceCandidate(data));
       }
     });
   });
@@ -148,7 +190,7 @@ function SendPage() {
 
       <Button
         onClick={() => {
-          alert("clicked");
+          answerTranfer(pc, db, "447.5083397859405");
         }}
       >
         answer the call with unique id
