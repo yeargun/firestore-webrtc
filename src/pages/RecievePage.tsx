@@ -14,6 +14,37 @@ import {
 import { useState, React } from "react";
 import { Button } from "@mui/material";
 
+const firebaseConfig = {
+  apiKey: "AIzaSyC7u3rcfvvdWkDEU4sqdVvsq9kbNtEv9vU",
+  authDomain: "sendstuf-a62cc.firebaseapp.com",
+  databaseURL:
+    "https://sendstuf-a62cc-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "sendstuf-a62cc",
+  storageBucket: "sendstuf-a62cc.appspot.com",
+  messagingSenderId: "971673330562",
+  appId: "1:971673330562:web:5b9011c1f81397fbd9a59b",
+  measurementId: "G-78MB2RBS4L",
+};
+
+const configuration = {
+  iceServers: [
+    {
+      urls: ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"],
+    },
+  ],
+  iceCandidatePoolSize: 10,
+};
+
+const pc = new RTCPeerConnection(configuration);
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+// Initialize Cloud Firestore and get a reference to the service
+const db = getFirestore(app);
+const currUrlPath = window.location.href.substring(
+  window.location.href.lastIndexOf("/") + 1
+);
+
 const answerTranfer = async (
   pc: RTCPeerConnection,
   db: Firestore,
@@ -55,41 +86,23 @@ const answerTranfer = async (
   });
 };
 
+// recieveDataChannel.onmessage = (event) => {
+//   console.log("Got Data Channel Message:", event.data);
+// };
+
 function RecievePage() {
-  const firebaseConfig = {
-    apiKey: "AIzaSyC7u3rcfvvdWkDEU4sqdVvsq9kbNtEv9vU",
-    authDomain: "sendstuf-a62cc.firebaseapp.com",
-    databaseURL:
-      "https://sendstuf-a62cc-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "sendstuf-a62cc",
-    storageBucket: "sendstuf-a62cc.appspot.com",
-    messagingSenderId: "971673330562",
-    appId: "1:971673330562:web:5b9011c1f81397fbd9a59b",
-    measurementId: "G-78MB2RBS4L",
+  const [messages, setMessages] = useState([]);
+
+  const handleRecieveMessage = (e) => {
+    console.log("e:", e);
+    setMessages([...messages, { yours: false, value: e.data }]);
+    console.log(messages);
   };
 
-  const configuration = {
-    iceServers: [
-      {
-        urls: [
-          "stun:stun1.l.google.com:19302",
-          "stun:stun2.l.google.com:19302",
-        ],
-      },
-    ],
-    iceCandidatePoolSize: 10,
+  pc.ondatachannel = (event) => {
+    const sendChannel = event.channel;
+    sendChannel.onmessage = handleRecieveMessage;
   };
-
-  const pc = new RTCPeerConnection(configuration);
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  // Initialize Cloud Firestore and get a reference to the service
-  const db = getFirestore(app);
-  const currUrlPath = window.location.href.substring(
-    window.location.href.lastIndexOf("/") + 1
-  );
-  console.log(currUrlPath);
 
   return (
     <>
@@ -102,6 +115,14 @@ function RecievePage() {
         }}
       >
         answer the call with unique id
+      </Button>
+      <Button
+        onClick={() => {
+          console.log("lclikecd");
+          console.log(recieveDataChannel);
+        }}
+      >
+        refrsh
       </Button>
     </>
   );
