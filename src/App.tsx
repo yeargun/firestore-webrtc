@@ -10,7 +10,6 @@ function App() {
       <Route path="/about" element={<Home />} />
       <Route path="/" element={<SendPage />} />
       <Route path="/recieve/*" element={<RecievePage />} />
-
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

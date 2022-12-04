@@ -7,8 +7,6 @@ import {
   setDoc,
   onSnapshot,
   Firestore,
-  getDoc,
-  updateDoc,
 } from "firebase/firestore";
 
 import { DropzoneArea } from "material-ui-dropzone";
@@ -37,7 +35,12 @@ const configuration = {
 };
 
 const pc = new RTCPeerConnection(configuration);
-const sendChannel = pc.createDataChannel("sendDataChannel");
+
+const dataChannelOptions = {
+  ordered: true,
+  reliable: true,
+};
+const sendChannel = pc.createDataChannel("sendDataChannel", dataChannelOptions);
 sendChannel.addEventListener("open", onSendChannelOpen);
 sendChannel.addEventListener("close", onSendChannelClosed);
 
@@ -104,9 +107,15 @@ function onSendChannelOpen() {
 function onSendChannelClosed() {
   console.log("Send channel is closed");
   pc.close();
-  pc = null;
   console.log("Closed local peer connection");
 }
+
+var yourConnection,
+  connectedUser,
+  dataChannel,
+  currentFile,
+  currentFileSize,
+  currentFileMeta;
 
 function SendPage() {
   const [toBeUploadedFiles, setToBeUploadedFiles] = useState([]);
@@ -119,9 +128,61 @@ function SendPage() {
       (messages = [...messages, { yours: true, value: "sender sending this" }])
     );
   };
+  function base64ToBlob(b64Data, contentType) {
+    contentType = contentType || "";
+
+    var byteArrays = [],
+      byteNumbers,
+      slice;
+
+    for (var i = 0; i < b64Data.length; i++) {
+      slice = b64Data[i];
+
+      byteNumbers = new Array(slice.length);
+      for (var n = 0; n < slice.length; n++) {
+        byteNumbers[n] = slice.charCodeAt(n);
+      }
+
+      var byteArray = new Uint8Array(byteNumbers);
+
+      byteArrays.push(byteArray);
+    }
+
+    var blob = new Blob(byteArrays, { type: contentType });
+    return blob;
+  }
+
+  const saveFile = (meta, data) => {
+    var blob = base64ToBlob(data, meta.type);
+    saveAs(blob, meta.name);
+  };
 
   const handleRecieveMessage = (e) => {
-    setMessages((messages) => [...messages, { yours: false, value: e.data }]);
+    setMessages([...messages, { yours: false, value: e.data }]);
+    try {
+      var message = JSON.parse(e.data);
+      switch (message.type) {
+        case "start":
+          currentFile = [];
+          currentFileSize = 0;
+          currentFileMeta = message.data;
+          console.log(message.data);
+          console.log("Receiving file", currentFileMeta);
+          break;
+        case "end":
+          saveFile(currentFileMeta, currentFile);
+          break;
+      }
+    } catch (e) {
+      // Assume this is file content
+      currentFile.push(atob(event.data));
+
+      currentFileSize += currentFile[currentFile.length - 1].length;
+
+      var percentage = Math.floor(
+        (currentFileSize / currentFileMeta.size) * 100
+      );
+    }
   };
 
   sendChannel.onmessage = handleRecieveMessage;
@@ -142,9 +203,9 @@ function SendPage() {
     <>
       <DropzoneArea
         sx={{ position: "fixed" }}
-        showPreviews={true}
-        showPreviewsInDropzone={false}
-        useChipsForPreview
+        // showPreviews={true}
+        showPreviewsInDropzone={true}
+        // useChipsForPreview
         filesLimit={7}
         previewText="Selected files"
         onChange={setToBeUploadedFiles}

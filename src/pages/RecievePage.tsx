@@ -41,6 +41,7 @@ const pc = new RTCPeerConnection(configuration);
 const app = initializeApp(firebaseConfig);
 // Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);
+
 const currUrlPath = window.location.href.substring(
   window.location.href.lastIndexOf("/") + 1
 );
@@ -86,10 +87,6 @@ const answerTranfer = async (
   });
 };
 
-// recieveDataChannel.onmessage = (event) => {
-//   console.log("Got Data Channel Message:", event.data);
-// };
-
 function RecievePage() {
   const [messages, setMessages] = useState([]);
 
@@ -115,14 +112,6 @@ function RecievePage() {
         }}
       >
         answer the call with unique id
-      </Button>
-      <Button
-        onClick={() => {
-          console.log("lclikecd");
-          console.log(recieveDataChannel);
-        }}
-      >
-        refrsh
       </Button>
     </>
   );
