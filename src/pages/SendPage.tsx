@@ -12,6 +12,7 @@ import {
 import { DropzoneArea } from "material-ui-dropzone";
 import { useState, React } from "react";
 import { Button } from "@mui/material";
+import { readFile } from "../File";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC7u3rcfvvdWkDEU4sqdVvsq9kbNtEv9vU",
@@ -48,10 +49,10 @@ sendChannel.addEventListener("close", onSendChannelClosed);
 const app = initializeApp(firebaseConfig);
 // Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);
-
+let testCallName = "";
 // 2. create an offer
 const createOffer = async (pc: RTCPeerConnection, db: Firestore) => {
-  const testCallName = Math.floor(Math.random() * 10000).toString();
+  testCallName = Math.floor(Math.random() * 10000).toString();
   const callDoc = doc(db, "calls", testCallName);
   const offerCandidatesRef = collection(callDoc, "offerCandidates");
   const answerCandidatesRef = collection(callDoc, "answerCandidates");
@@ -124,6 +125,7 @@ function SendPage() {
 
   const sendMessage = () => {
     sendChannel.send("sender sending this");
+
     setMessages(
       (messages = [...messages, { yours: true, value: "sender sending this" }])
     );
@@ -188,19 +190,31 @@ function SendPage() {
   sendChannel.onmessage = handleRecieveMessage;
 
   sendChannel.addEventListener("open", (event) => {
-    console.log("datachannelis open");
     console.log("sended tihs messag:", JSON.stringify("HELLO IM PEER A."));
-    console.log("datachannel itself:", sendChannel);
     sendChannel.send(JSON.stringify("HELLO IM PEER A."));
   });
 
-  // Disable input when closed
-  sendChannel.addEventListener("close", (event) => {
-    console.log("datachannelis open");
-  });
+  const uploadFiles = () => {
+    const fileReader = new FileReader();
+    console.log("tobeuploadedfiles", toBeUploadedFiles);
+    toBeUploadedFiles.forEach((file) => {
+      readFile(file).then((fileArrayBuffer) => {
+        const CHUNK_SIZE = 5000;
+        const totalChunks = fileArrayBuffer.byteLength / CHUNK_SIZE;
+        for (let i = 0; i < totalChunks + 1; i++) {
+          let CHUNK = fileArrayBuffer.slice(
+            i * CHUNK_SIZE,
+            (i + 1) * CHUNK_SIZE
+          );
+          sendChannel.send(CHUNK);
+        }
+      });
+    });
+  };
 
   return (
     <>
+      <h1>SEND SECURE</h1>
       <DropzoneArea
         sx={{ position: "fixed" }}
         // showPreviews={true}
@@ -227,6 +241,17 @@ function SendPage() {
       >
         sendMessage
       </Button>
+
+      <Button
+        onClick={() => {
+          uploadFiles();
+        }}
+      >
+        uploadFiles
+      </Button>
+      <br />
+      <br />
+      <h2>Share the link: http://127.0.0.1:5173/recieve/{testCallName}</h2>
     </>
   );
 }
