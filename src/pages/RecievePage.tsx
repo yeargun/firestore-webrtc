@@ -13,6 +13,7 @@ import {
 
 import { useState, React } from "react";
 import { Button } from "@mui/material";
+import { saveAs } from "file-saver";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC7u3rcfvvdWkDEU4sqdVvsq9kbNtEv9vU",
@@ -46,25 +47,35 @@ const currUrlPath = window.location.href.substring(
   window.location.href.lastIndexOf("/") + 1
 );
 
-const answerTranfer = async (
+// var yourConnection,
+//   connectedUser,
+//   dataChannel,
+//   currentFile,
+//   currentFileSize,
+//   currentFileMeta;
+var fileMetadata = {};
+const answerTransfer = async (
   pc: RTCPeerConnection,
   db: Firestore,
-  callId: string
+  connectionKey: string
 ) => {
-  const callDoc = doc(db, "calls", callId);
+  const callDoc = doc(db, "calls", connectionKey);
   const offerCandidatesRef = collection(callDoc, "offerCandidates");
   const answerCandidatesRef = collection(callDoc, "answerCandidates");
 
-  console.log("answerCandidatesRef", answerCandidatesRef);
-  console.log("offercandidateref", offerCandidatesRef);
   pc.onicecandidate = (event) => {
     event.candidate && addDoc(answerCandidatesRef, event.candidate.toJSON());
   };
 
-  const callData = (await getDoc(callDoc)).data();
-  console.log("calldata ->", callData);
-  const offerDescription = callData.offer;
-  await pc.setRemoteDescription(new RTCSessionDescription(offerDescription));
+  const senderFileShareData = (await getDoc(callDoc)).data();
+  fileMetadata = senderFileShareData.metadata;
+  const senderFileShareOfferData = senderFileShareData.offer;
+
+  console.log("senderSDP ->", senderFileShareData);
+  console.log("fileMetadata ->", fileMetadata);
+  await pc.setRemoteDescription(
+    new RTCSessionDescription(senderFileShareOfferData)
+  );
 
   const answerDescription = await pc.createAnswer();
   await pc.setLocalDescription(answerDescription);
@@ -87,31 +98,80 @@ const answerTranfer = async (
   });
 };
 
+var buffer = [];
+
 function RecievePage() {
   const [messages, setMessages] = useState([]);
-
-  const handleRecieveMessage = (e) => {
-    console.log("e:", e);
-    setMessages([...messages, { yours: false, value: e.data }]);
-    console.log(messages);
-  };
 
   pc.ondatachannel = (event) => {
     const sendChannel = event.channel;
     sendChannel.onmessage = handleRecieveMessage;
   };
 
+  function base64ToBlob(b64Data, contentType) {
+    contentType = contentType || "";
+
+    const byteArrays = [];
+    let byteNumbers;
+    let slice;
+
+    for (let i = 0; i < b64Data.length; i++) {
+      slice = b64Data[i];
+
+      byteNumbers = new Array(slice.length);
+      for (let n = 0; n < slice.length; n++) {
+        byteNumbers[n] = slice.charCodeAt(n);
+      }
+
+      const byteArray = new Uint8Array(byteNumbers);
+
+      byteArrays.push(byteArray);
+    }
+
+    const blob = new Blob(byteArrays, { type: contentType });
+    return blob;
+  }
+
+  const saveFile = (meta, data) => {
+    console.log("meta.type this:", meta.type);
+    const dataBlob = new Blob(data, { type: meta.type });
+    const url = URL.createObjectURL(dataBlob);
+
+    let a = document.createElement("a");
+    a.href = url;
+    a.download = meta.name;
+    a.click();
+    // saveAs(blob, meta.name);
+  };
+
+  const handleRecieveMessage = (e) => {
+    buffer.push(e.data);
+    console.log(e);
+
+    // const message = JSON.parse(e.data);
+
+    console.log("buffer length:", buffer.length);
+  };
+
   return (
     <>
       <h1>hello recievepage</h1>
       <h2>might be creazy recieving stuff</h2>
-
-      <Button
+      <h3>You are recieving "bla bla" file, "bla bla" size. Ok ?</h3>
+      <h1>File download percentage ..</h1>
+      <button
         onClick={() => {
-          answerTranfer(pc, db, currUrlPath);
+          answerTransfer(pc, db, currUrlPath);
         }}
       >
-        answer the call with unique id
+        ok
+      </button>
+      <Button
+        onClick={() => {
+          saveFile(fileMetadata, buffer);
+        }}
+      >
+        saveFile. recieved all at buffer xD for real
       </Button>
     </>
   );

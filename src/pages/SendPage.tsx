@@ -42,18 +42,20 @@ const dataChannelOptions = {
   reliable: true,
 };
 const sendChannel = pc.createDataChannel("sendDataChannel", dataChannelOptions);
-sendChannel.addEventListener("open", onSendChannelOpen);
-sendChannel.addEventListener("close", onSendChannelClosed);
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 // Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);
-let testCallName = "";
+let urlKey = "";
 // 2. create an offer
-const createOffer = async (pc: RTCPeerConnection, db: Firestore) => {
-  testCallName = Math.floor(Math.random() * 10000).toString();
-  const callDoc = doc(db, "calls", testCallName);
+const createOffer = async (
+  pc: RTCPeerConnection,
+  db: Firestore,
+  fileList: File[]
+) => {
+  urlKey = Math.floor(Math.random() * 10000).toString();
+  const callDoc = doc(db, "calls", urlKey);
   const offerCandidatesRef = collection(callDoc, "offerCandidates");
   const answerCandidatesRef = collection(callDoc, "answerCandidates");
 
@@ -69,9 +71,13 @@ const createOffer = async (pc: RTCPeerConnection, db: Firestore) => {
     type: offerDescription.type,
   };
 
-  console.log("created offer:", offer);
+  const metadata = {
+    name: fileList[0].name,
+    size: fileList[0].size,
+    type: fileList[0].type,
+  };
 
-  setDoc(callDoc, { offer });
+  setDoc(callDoc, { offer, metadata });
 
   // Listen for remote answer
   onSnapshot(callDoc, (doc) => {
@@ -81,6 +87,7 @@ const createOffer = async (pc: RTCPeerConnection, db: Firestore) => {
     if (!pc.currentRemoteDescription && data?.answer) {
       const answerDescription = new RTCSessionDescription(data.answer);
       pc.setRemoteDescription(answerDescription);
+      return urlKey;
     }
   });
 
@@ -95,104 +102,27 @@ const createOffer = async (pc: RTCPeerConnection, db: Firestore) => {
   });
 };
 
-function onSendChannelOpen() {
-  console.log("Send channel is open");
-
-  sendChannel.addEventListener("bufferedamountlow", (e) => {
-    console.log("BufferedAmountLow event:", e);
-  });
-
-  sendChannel.send("stfu please");
-}
-
-function onSendChannelClosed() {
-  console.log("Send channel is closed");
-  pc.close();
-  console.log("Closed local peer connection");
-}
-
-var yourConnection,
-  connectedUser,
-  dataChannel,
-  currentFile,
-  currentFileSize,
-  currentFileMeta;
-
 function SendPage() {
   const [toBeUploadedFiles, setToBeUploadedFiles] = useState([]);
+  const [shareKey, setShareKey] = useState("");
   let [messages, setMessages] = useState([]);
   console.log("pc", pc);
+  sendChannel.addEventListener("open", onSendChannelOpen);
+  sendChannel.addEventListener("close", onSendChannelClosed);
 
-  const sendMessage = () => {
-    sendChannel.send("sender sending this");
-
-    setMessages(
-      (messages = [...messages, { yours: true, value: "sender sending this" }])
-    );
-  };
-  function base64ToBlob(b64Data, contentType) {
-    contentType = contentType || "";
-
-    var byteArrays = [],
-      byteNumbers,
-      slice;
-
-    for (var i = 0; i < b64Data.length; i++) {
-      slice = b64Data[i];
-
-      byteNumbers = new Array(slice.length);
-      for (var n = 0; n < slice.length; n++) {
-        byteNumbers[n] = slice.charCodeAt(n);
-      }
-
-      var byteArray = new Uint8Array(byteNumbers);
-
-      byteArrays.push(byteArray);
-    }
-
-    var blob = new Blob(byteArrays, { type: contentType });
-    return blob;
+  function onSendChannelOpen() {
+    console.log("Send channel is open");
+    uploadFiles();
+    sendChannel.addEventListener("bufferedamountlow", (e) => {
+      console.log("BufferedAmountLow event:", e);
+    });
   }
 
-  const saveFile = (meta, data) => {
-    var blob = base64ToBlob(data, meta.type);
-    saveAs(blob, meta.name);
-  };
-
-  const handleRecieveMessage = (e) => {
-    setMessages([...messages, { yours: false, value: e.data }]);
-    try {
-      var message = JSON.parse(e.data);
-      switch (message.type) {
-        case "start":
-          currentFile = [];
-          currentFileSize = 0;
-          currentFileMeta = message.data;
-          console.log(message.data);
-          console.log("Receiving file", currentFileMeta);
-          break;
-        case "end":
-          saveFile(currentFileMeta, currentFile);
-          break;
-      }
-    } catch (e) {
-      // Assume this is file content
-      currentFile.push(atob(event.data));
-
-      currentFileSize += currentFile[currentFile.length - 1].length;
-
-      var percentage = Math.floor(
-        (currentFileSize / currentFileMeta.size) * 100
-      );
-    }
-  };
-
-  sendChannel.onmessage = handleRecieveMessage;
-
-  sendChannel.addEventListener("open", (event) => {
-    console.log("sended tihs messag:", JSON.stringify("HELLO IM PEER A."));
-    sendChannel.send(JSON.stringify("HELLO IM PEER A."));
-  });
+  function onSendChannelClosed() {
+    console.log("Send channel is closed");
+    pc.close();
+    console.log("Closed local peer connection");
+  }
 
   const uploadFiles = () => {
     const fileReader = new FileReader();
@@ -201,15 +131,25 @@ function SendPage() {
       readFile(file).then((fileArrayBuffer) => {
         const CHUNK_SIZE = 5000;
         const totalChunks = fileArrayBuffer.byteLength / CHUNK_SIZE;
-        for (let i = 0; i < totalChunks + 1; i++) {
-          let CHUNK = fileArrayBuffer.slice(
-            i * CHUNK_SIZE,
-            (i + 1) * CHUNK_SIZE
-          );
+        let CHUNK = fileArrayBuffer.slice(0, CHUNK_SIZE);
+        CHUNK.type = "start";
+        sendChannel.send(CHUNK);
+        for (let i = 1; i < totalChunks; i++) {
+          CHUNK = fileArrayBuffer.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
           sendChannel.send(CHUNK);
         }
+        CHUNK = fileArrayBuffer.slice(
+          totalChunks * CHUNK_SIZE,
+          (totalChunks + 1) * CHUNK_SIZE
+        );
+        console.log(CHUNK.type);
+        CHUNK.type = "end";
+        console.log(CHUNK.type);
+
+        sendChannel.send(CHUNK);
       });
     });
+    setToBeUploadedFiles([]);
   };
 
   return (
@@ -228,30 +168,28 @@ function SendPage() {
       <Button
         onClick={() => {
           console.log("sdfs");
-          createOffer(pc, db);
+          createOffer(pc, db, toBeUploadedFiles).then((urlKey) => {
+            setShareKey(urlKey);
+          });
         }}
       >
-        create an offer
+        create a share link
       </Button>
 
-      <Button
-        onClick={() => {
-          sendMessage();
-        }}
-      >
-        sendMessage
-      </Button>
-
-      <Button
+      {/* <Button
         onClick={() => {
           uploadFiles();
         }}
       >
         uploadFiles
-      </Button>
+      </Button> */}
       <br />
       <br />
-      <h2>Share the link: http://127.0.0.1:5173/recieve/{testCallName}</h2>
+      {urlKey && (
+        <h2>
+          Share the link: {window.location.href}recieve/{urlKey}
+        </h2>
+      )}
     </>
   );
 }
