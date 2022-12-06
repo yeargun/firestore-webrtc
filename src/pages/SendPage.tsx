@@ -10,7 +10,7 @@ import {
 } from "firebase/firestore";
 
 import { DropzoneArea } from "material-ui-dropzone";
-import { useState, React } from "react";
+import { useState } from "react";
 import { Button } from "@mui/material";
 import { readFile } from "../File";
 
@@ -103,10 +103,9 @@ const createOffer = async (
 };
 
 function SendPage() {
-  const [toBeUploadedFiles, setToBeUploadedFiles] = useState([]);
-  const [shareKey, setShareKey] = useState("");
-  let [messages, setMessages] = useState([]);
-  console.log("pc", pc);
+  const [toBeUploadedFiles, setToBeUploadedFiles] = useState<File[]>([]);
+  const [shareKey, setShareKey] = useState<string>("");
+
   sendChannel.addEventListener("open", onSendChannelOpen);
   sendChannel.addEventListener("close", onSendChannelClosed);
 
@@ -128,7 +127,7 @@ function SendPage() {
     const fileReader = new FileReader();
     console.log("tobeuploadedfiles", toBeUploadedFiles);
     toBeUploadedFiles.forEach((file) => {
-      readFile(file).then((fileArrayBuffer) => {
+      readFile(file).then((fileArrayBuffer: any) => {
         const CHUNK_SIZE = 5000;
         const totalChunks = fileArrayBuffer.byteLength / CHUNK_SIZE;
         let CHUNK = fileArrayBuffer.slice(0, CHUNK_SIZE);
@@ -156,9 +155,8 @@ function SendPage() {
     <>
       <h1>SEND SECURE</h1>
       <DropzoneArea
-        sx={{ position: "fixed" }}
         // showPreviews={true}
-        showPreviewsInDropzone={true}
+        showPreviewsInDropzone
         // useChipsForPreview
         filesLimit={7}
         previewText="Selected files"
@@ -166,16 +164,16 @@ function SendPage() {
         maxFileSize={2147483648}
       />
       <Button
-        onClick={() => {
+        onClick={async () => {
           console.log("sdfs");
+          // eslint-disable-next-line @typescript-eslint/no-shadow
           createOffer(pc, db, toBeUploadedFiles).then((urlKey) => {
-            setShareKey(urlKey);
+            setShareKey("urlKey");
           });
         }}
       >
         create a share link
       </Button>
-
       {/* <Button
         onClick={() => {
           uploadFiles();

@@ -11,7 +11,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 
-import { useState, React } from "react";
+import { useState } from "react";
 import { Button } from "@mui/material";
 
 const firebaseConfig = {
@@ -67,8 +67,8 @@ const answerTransfer = async (
   };
 
   const senderFileShareData = (await getDoc(callDoc)).data();
-  fileMetadata = senderFileShareData.metadata;
-  const senderFileShareOfferData = senderFileShareData.offer;
+  fileMetadata = senderFileShareData?.metadata;
+  const senderFileShareOfferData = senderFileShareData?.offer;
 
   console.log("senderSDP ->", senderFileShareData);
   console.log("fileMetadata ->", fileMetadata);
@@ -97,7 +97,7 @@ const answerTransfer = async (
   });
 };
 
-var buffer = [];
+var buffer: any[] = [];
 
 function RecievePage() {
   const [messages, setMessages] = useState([]);
@@ -107,7 +107,7 @@ function RecievePage() {
     sendChannel.onmessage = handleRecieveMessage;
   };
 
-  function base64ToBlob(b64Data, contentType) {
+  function base64ToBlob(b64Data: string | any[], contentType: string) {
     contentType = contentType || "";
 
     const byteArrays = [];
@@ -131,7 +131,10 @@ function RecievePage() {
     return blob;
   }
 
-  const saveFile = (meta, data) => {
+  const saveFile = (
+    meta: { type?: any; name?: any },
+    data: any[] | undefined
+  ) => {
     console.log("meta.type this:", meta.type);
     const dataBlob = new Blob(data, { type: meta.type });
     const url = URL.createObjectURL(dataBlob);
@@ -143,7 +146,7 @@ function RecievePage() {
     // saveAs(blob, meta.name);
   };
 
-  const handleRecieveMessage = (e) => {
+  const handleRecieveMessage = (e: { data: any }) => {
     buffer.push(e.data);
     console.log(e);
 

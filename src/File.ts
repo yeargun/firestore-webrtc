@@ -1,4 +1,4 @@
-export async function readFile(file) {
+export async function readFile(file: File) {
   return new Promise((resolve, reject) => {
     let reader = new FileReader();
     reader.addEventListener("error", (error) => {
@@ -10,7 +10,7 @@ export async function readFile(file) {
     });
 
     reader.addEventListener("load", (e) => {
-      resolve(e.target.result);
+      resolve(e?.target?.result);
     });
 
     reader.readAsArrayBuffer(file);
