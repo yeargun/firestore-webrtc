@@ -1,0 +1,14 @@
+version: '3.5'
+
+services:
+  send_secure:
+    container_name: send_secure
+    build: ./
+    ports:
+      - 5173:5173
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "5"
+    command: "npm run dev"
