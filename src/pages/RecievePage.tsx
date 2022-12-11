@@ -112,13 +112,13 @@ function RecievePage() {
           <b> {humanFileSize(fileMetadata?.size)}</b> size ?
         </p>
       )}
-      <button
+      <Button
         onClick={() => {
           answerTransfer(pc, db, currUrlPath);
         }}
       >
         yes
-      </button>
+      </Button>
 
       <h3>File download percentage {downloadPercetange}%</h3>
       <Button
@@ -126,7 +126,7 @@ function RecievePage() {
           saveFile(fileMetadata, buffer);
         }}
       >
-        saveFile. recieved all at buffer xD for real
+        Save File
       </Button>
     </>
   );

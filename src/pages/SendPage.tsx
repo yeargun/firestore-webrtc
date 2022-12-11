@@ -88,6 +88,7 @@ const createOffer = async (
 function SendPage() {
   const [toBeUploadedFiles, setToBeUploadedFiles] = useState<File[]>([]);
   const [shareKey, setShareKey] = useState<string>("");
+  const [uploadPercentage, setUploadPercentage] = useState(0);
 
   const onSendChannelOpen = () => {
     console.log("Send channel is open");
@@ -115,19 +116,11 @@ function SendPage() {
         let CHUNK = fileArrayBuffer.slice(0, CHUNK_SIZE);
         CHUNK.type = "start";
         sendChannel.send(CHUNK);
-        for (let i = 1; i < totalChunks; i++) {
+        for (let i = 1; i < totalChunks + 1; i++) {
           CHUNK = fileArrayBuffer.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
           sendChannel.send(CHUNK);
+          setUploadPercentage(Math.floor(((i + 1) * 100) / totalChunks));
         }
-        CHUNK = fileArrayBuffer.slice(
-          totalChunks * CHUNK_SIZE,
-          (totalChunks + 1) * CHUNK_SIZE
-        );
-        console.log(CHUNK.type);
-        CHUNK.type = "end";
-        console.log(CHUNK.type);
-        sendChannel.send(CHUNK);
-        // sendChannel.close();
       });
     });
     setToBeUploadedFiles([]);
@@ -159,9 +152,12 @@ function SendPage() {
       <br />
       <br />
       {urlKey && (
-        <h2>
-          Share the link: {window.location.href}recieve/{urlKey}
-        </h2>
+        <>
+          <h2>
+            Share the link: {window.location.href}recieve/{urlKey}
+          </h2>
+          <h3>File upload percentage {uploadPercentage}%</h3>
+        </>
       )}
     </>
   );
