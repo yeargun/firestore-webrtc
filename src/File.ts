@@ -1,3 +1,5 @@
+import { CHUNK_SIZE } from "./Config";
+
 export async function readFile(file: File) {
   return new Promise((resolve, reject) => {
     let reader = new FileReader();
@@ -17,7 +19,7 @@ export async function readFile(file: File) {
   });
 }
 
-export function humanFileSize(bytes, si = true, dp = 1) {
+export function humanFileSize(bytes: string | number, si = true, dp = 1) {
   const thresh = si ? 1000 : 1024;
 
   if (Math.abs(bytes) < thresh) {
@@ -40,3 +42,21 @@ export function humanFileSize(bytes, si = true, dp = 1) {
 
   return bytes.toFixed(dp) + " " + units[u];
 }
+
+export const saveFile = (
+  meta: { type?: any; name?: any },
+  data: any[] | undefined
+) => {
+  const dataBlob = new Blob(data, { type: meta.type });
+  const url = URL.createObjectURL(dataBlob);
+
+  let a = document.createElement("a");
+  a.href = url;
+  a.download = meta.name;
+  a.click();
+};
+
+export const fileDownloadPercentage = (fileSize, buffer) => {
+  const expectedChunkNum = fileSize / CHUNK_SIZE;
+  return Math.floor((buffer.length * 100) / expectedChunkNum);
+};

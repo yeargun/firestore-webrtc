@@ -13,48 +13,31 @@ import { DropzoneArea } from "material-ui-dropzone";
 import { useState } from "react";
 import { Button } from "@mui/material";
 import { readFile } from "../File";
+import {
+  CHUNK_SIZE,
+  RTCconfig,
+  firebaseConfig,
+  dataChannelOptions,
+} from "../Config";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC7u3rcfvvdWkDEU4sqdVvsq9kbNtEv9vU",
-  authDomain: "sendstuf-a62cc.firebaseapp.com",
-  databaseURL:
-    "https://sendstuf-a62cc-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "sendstuf-a62cc",
-  storageBucket: "sendstuf-a62cc.appspot.com",
-  messagingSenderId: "971673330562",
-  appId: "1:971673330562:web:5b9011c1f81397fbd9a59b",
-  measurementId: "G-78MB2RBS4L",
-};
-
-const configuration = {
-  iceServers: [
-    {
-      urls: ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"],
-    },
-  ],
-  iceCandidatePoolSize: 10,
-};
-
-const pc = new RTCPeerConnection(configuration);
-
-const dataChannelOptions = {
-  ordered: true,
-  reliable: true,
-};
+const pc = new RTCPeerConnection(RTCconfig);
 const sendChannel = pc.createDataChannel("sendDataChannel", dataChannelOptions);
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-// Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);
+
 let urlKey = "";
-// 2. create an offer
+
+const createSecureKey = () => {
+  return Math.floor(Math.random() * 10000).toString();
+};
+
 const createOffer = async (
   pc: RTCPeerConnection,
   db: Firestore,
   fileList: File[]
 ) => {
-  urlKey = Math.floor(Math.random() * 10000).toString();
+  urlKey = createSecureKey();
   const callDoc = doc(db, "calls", urlKey);
   const offerCandidatesRef = collection(callDoc, "offerCandidates");
   const answerCandidatesRef = collection(callDoc, "answerCandidates");
@@ -106,29 +89,28 @@ function SendPage() {
   const [toBeUploadedFiles, setToBeUploadedFiles] = useState<File[]>([]);
   const [shareKey, setShareKey] = useState<string>("");
 
-  sendChannel.addEventListener("open", onSendChannelOpen);
-  sendChannel.addEventListener("close", onSendChannelClosed);
-
-  function onSendChannelOpen() {
+  const onSendChannelOpen = () => {
     console.log("Send channel is open");
     uploadFiles();
     sendChannel.addEventListener("bufferedamountlow", (e) => {
       console.log("BufferedAmountLow event:", e);
     });
-  }
+  };
 
-  function onSendChannelClosed() {
+  const onSendChannelClosed = () => {
     console.log("Send channel is closed");
     pc.close();
     console.log("Closed local peer connection");
-  }
+  };
+
+  sendChannel.addEventListener("open", onSendChannelOpen);
+  sendChannel.addEventListener("close", onSendChannelClosed);
 
   const uploadFiles = () => {
     const fileReader = new FileReader();
     console.log("tobeuploadedfiles", toBeUploadedFiles);
     toBeUploadedFiles.forEach((file) => {
       readFile(file).then((fileArrayBuffer: any) => {
-        const CHUNK_SIZE = 5000;
         const totalChunks = fileArrayBuffer.byteLength / CHUNK_SIZE;
         let CHUNK = fileArrayBuffer.slice(0, CHUNK_SIZE);
         CHUNK.type = "start";
@@ -144,8 +126,8 @@ function SendPage() {
         console.log(CHUNK.type);
         CHUNK.type = "end";
         console.log(CHUNK.type);
-
         sendChannel.send(CHUNK);
+        // sendChannel.close();
       });
     });
     setToBeUploadedFiles([]);
@@ -174,13 +156,6 @@ function SendPage() {
       >
         create a share link
       </Button>
-      {/* <Button
-        onClick={() => {
-          uploadFiles();
-        }}
-      >
-        uploadFiles
-      </Button> */}
       <br />
       <br />
       {urlKey && (

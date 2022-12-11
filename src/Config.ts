@@ -18,3 +18,10 @@ export const RTCconfig = {
   ],
   iceCandidatePoolSize: 10,
 };
+
+export const CHUNK_SIZE = 5000;
+
+export const dataChannelOptions = {
+  ordered: true,
+  reliable: true,
+};
