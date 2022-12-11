@@ -4,7 +4,6 @@ import {
   collection,
   addDoc,
   doc,
-  setDoc,
   onSnapshot,
   Firestore,
   getDoc,
@@ -13,33 +12,12 @@ import {
 
 import { useState } from "react";
 import { Button } from "@mui/material";
+import { humanFileSize } from "../File";
+import { RTCconfig, firebaseConfig } from "../Config";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC7u3rcfvvdWkDEU4sqdVvsq9kbNtEv9vU",
-  authDomain: "sendstuf-a62cc.firebaseapp.com",
-  databaseURL:
-    "https://sendstuf-a62cc-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "sendstuf-a62cc",
-  storageBucket: "sendstuf-a62cc.appspot.com",
-  messagingSenderId: "971673330562",
-  appId: "1:971673330562:web:5b9011c1f81397fbd9a59b",
-  measurementId: "G-78MB2RBS4L",
-};
+const pc = new RTCPeerConnection(RTCconfig);
 
-const configuration = {
-  iceServers: [
-    {
-      urls: ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"],
-    },
-  ],
-  iceCandidatePoolSize: 10,
-};
-
-const pc = new RTCPeerConnection(configuration);
-
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-// Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);
 
 const currUrlPath = window.location.href.substring(
@@ -131,7 +109,7 @@ function RecievePage() {
       <br />
       <h2>
         Wanna download the file: "{fileMetadata?.name}", size:
-        {fileMetadata?.size} Ok ?
+        {humanFileSize(fileMetadata?.size)} Ok ?
       </h2>
       <button
         onClick={() => {
