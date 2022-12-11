@@ -19,7 +19,7 @@ export async function readFile(file: File) {
   });
 }
 
-export function humanFileSize(bytes: string | number, si = true, dp = 1) {
+export function humanFileSize(bytes: number, si = true, dp = 1) {
   const thresh = si ? 1000 : 1024;
 
   if (Math.abs(bytes) < thresh) {
