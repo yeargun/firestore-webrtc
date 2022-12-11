@@ -15,6 +15,12 @@ import { Button } from "@mui/material";
 import { humanFileSize, saveFile, fileDownloadPercentage } from "../File";
 import { RTCconfig, firebaseConfig } from "../Config";
 
+interface FileMetadata {
+  name: string;
+  size: number;
+  type: string;
+}
+
 const currUrlPath = window.location.href.substring(
   window.location.href.lastIndexOf("/") + 1
 );
@@ -70,7 +76,11 @@ let buffer: any[] = [];
 
 function RecievePage() {
   const [messages, setMessages] = useState([]);
-  const [fileMetadata, setFileMetadata] = useState({});
+  const [fileMetadata, setFileMetadata] = useState<FileMetadata>({
+    name: "",
+    size: 0,
+    type: "",
+  });
   const [downloadPercetange, setDownloadPercentage] = useState(0);
 
   useEffect(() => {
@@ -94,7 +104,7 @@ function RecievePage() {
     <>
       <h1>SEND SECURE</h1>
       <br />
-      {Object.keys(fileMetadata).length === 0 ? (
+      {fileMetadata.size === 0 ? (
         <br />
       ) : (
         <p>

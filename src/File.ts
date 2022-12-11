@@ -56,7 +56,7 @@ export const saveFile = (
   a.click();
 };
 
-export const fileDownloadPercentage = (fileSize, buffer) => {
+export const fileDownloadPercentage = (fileSize: number, buffer: any[]) => {
   const expectedChunkNum = fileSize / CHUNK_SIZE;
   return Math.floor((buffer.length * 100) / expectedChunkNum);
 };
