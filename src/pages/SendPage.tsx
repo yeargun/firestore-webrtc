@@ -119,7 +119,7 @@ function SendPage() {
         for (let i = 1; i < totalChunks + 1; i++) {
           CHUNK = fileArrayBuffer.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
           sendChannel.send(CHUNK);
-          setUploadPercentage(Math.floor(((i + 1) * 100) / totalChunks));
+          setUploadPercentage(Math.floor((i * 100) / totalChunks + 0.05));
         }
       });
     });
