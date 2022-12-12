@@ -11,7 +11,6 @@ import {
 } from "firebase/firestore";
 
 import { useEffect, useState } from "react";
-import { Button } from "@mui/material";
 import { humanFileSize, saveFile, fileDownloadPercentage } from "../../File";
 import { RTCconfig, firebaseConfig } from "../../Config";
 import Header from "../Header/Header";
@@ -99,7 +98,6 @@ function RecievePage() {
   const handleRecieveMessage = (e: { data: any }) => {
     buffer.push(e.data);
     setDownloadPercentage(fileDownloadPercentage(fileMetadata?.size, buffer));
-    // console.log("buffer length:", buffer.length);
   };
 
   return (
@@ -110,8 +108,8 @@ function RecievePage() {
         <br />
       ) : (
         <p className="wannaDownload">
-          Wanna download the file <b>{fileMetadata?.name}</b> which has
-          <b> {humanFileSize(fileMetadata?.size)}</b> size ?
+          Wanna download the file <b>{fileMetadata?.name}</b> which is
+          <b> {humanFileSize(fileMetadata?.size)}</b> in size ?
         </p>
       )}
       <button

@@ -11,7 +11,6 @@ import {
 
 import { DropzoneArea } from "material-ui-dropzone";
 import { useState } from "react";
-import { CircularProgress } from "@mui/material";
 import { readFile } from "../../File";
 import {
   CHUNK_SIZE,
@@ -138,19 +137,6 @@ function SendPage() {
           onChange={setToBeUploadedFiles}
           maxFileSize={2147483648}
         />
-        {/* <div className="button">
-          <Button
-            sx={{ color: "black", outlineColor: "black" }}
-            variant="outlined"
-            onClick={async () => {
-              createOffer(pc, db, toBeUploadedFiles).then((urlKey) => {
-                setShareKey("urlKey");
-              });
-            }}
-          >
-            create a share link
-          </Button>
-        </div> */}
         <button
           className="shareFileButton"
           onClick={async () => {
