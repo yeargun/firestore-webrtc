@@ -1,15 +1,13 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import Footer from "./pages/Footer";
-import Home from "./pages/Home";
-import NotFound from "./pages/NotFound";
-import RecievePage from "./pages/RecievePage";
-import SendPage from "./pages/SendPage";
+import Footer from "./components/Footer/Footer";
+import NotFound from "./components/NotFound/NotFound";
+import RecievePage from "./components/RecievePage/RecievePage";
+import SendPage from "./components/SendPage/SendPage";
 
 function App() {
   return (
     <>
       <Routes>
-        <Route path="/about" element={<Home />} />
         <Route path="/" element={<SendPage />} />
         <Route path="/recieve/*" element={<RecievePage />} />
         <Route path="*" element={<NotFound />} />

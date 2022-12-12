@@ -12,8 +12,9 @@ import {
 
 import { useEffect, useState } from "react";
 import { Button } from "@mui/material";
-import { humanFileSize, saveFile, fileDownloadPercentage } from "../File";
-import { RTCconfig, firebaseConfig } from "../Config";
+import { humanFileSize, saveFile, fileDownloadPercentage } from "../../File";
+import { RTCconfig, firebaseConfig } from "../../Config";
+import Header from "../Header/Header";
 
 interface FileMetadata {
   name: string;
@@ -102,7 +103,7 @@ function RecievePage() {
 
   return (
     <>
-      <h1>SEND SECURE</h1>
+      <Header />
       <br />
       {fileMetadata.size === 0 ? (
         <br />

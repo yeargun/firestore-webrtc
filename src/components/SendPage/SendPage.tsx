@@ -11,14 +11,16 @@ import {
 
 import { DropzoneArea } from "material-ui-dropzone";
 import { useState } from "react";
-import { Button } from "@mui/material";
-import { readFile } from "../File";
+import { CircularProgress } from "@mui/material";
+import { readFile } from "../../File";
 import {
   CHUNK_SIZE,
   RTCconfig,
   firebaseConfig,
   dataChannelOptions,
-} from "../Config";
+} from "../../Config";
+import Header from "../Header/Header";
+import "./SendPage.css";
 
 const pc = new RTCPeerConnection(RTCconfig);
 const sendChannel = pc.createDataChannel("sendDataChannel", dataChannelOptions);
@@ -128,37 +130,53 @@ function SendPage() {
 
   return (
     <>
-      <h1>SEND SECURE</h1>
-      <DropzoneArea
-        // showPreviews={true}
-        showPreviewsInDropzone
-        // useChipsForPreview
-        filesLimit={7}
-        previewText="Selected files"
-        onChange={setToBeUploadedFiles}
-        maxFileSize={2147483648}
-      />
-      <Button
-        onClick={async () => {
-          console.log("sdfs");
-          // eslint-disable-next-line @typescript-eslint/no-shadow
-          createOffer(pc, db, toBeUploadedFiles).then((urlKey) => {
-            setShareKey("urlKey");
-          });
-        }}
-      >
-        create a share link
-      </Button>
-      <br />
-      <br />
-      {urlKey && (
-        <>
-          <h2>
-            Share the link: {window.location.href}recieve/{urlKey}
-          </h2>
-          <h3>File upload percentage {uploadPercentage}%</h3>
-        </>
-      )}
+      <Header />
+      <div className="container">
+        <DropzoneArea
+          showPreviewsInDropzone
+          filesLimit={7}
+          previewText="Selected files"
+          onChange={setToBeUploadedFiles}
+          maxFileSize={2147483648}
+        />
+        {/* <div className="button">
+          <Button
+            sx={{ color: "black", outlineColor: "black" }}
+            variant="outlined"
+            onClick={async () => {
+              createOffer(pc, db, toBeUploadedFiles).then((urlKey) => {
+                setShareKey("urlKey");
+              });
+            }}
+          >
+            create a share link
+          </Button>
+        </div> */}
+        <button
+          onClick={async () => {
+            createOffer(pc, db, toBeUploadedFiles).then((urlKey) => {
+              setShareKey("urlKey");
+            });
+          }}
+        >
+          create a share link
+        </button>
+
+        <br />
+        <br />
+        <div className="FileUploadDetails">
+          {urlKey && (
+            <>
+              <h2>
+                Share the link: {window.location.href}recieve/{urlKey}
+              </h2>
+              <h3 className="uploadPercentage">
+                Upload percentage {uploadPercentage}%
+              </h3>
+            </>
+          )}
+        </div>
+      </div>
     </>
   );
 }

@@ -12,7 +12,7 @@ const Footer = () => {
   return (
     <Box>
       <h1 style={{ color: "white", textAlign: "center", marginTop: "-50px" }}>
-        Send Secure: Peer to peer secure file transfer app
+        Send Secure - Peer to peer secure file transfer app
       </h1>
       <Container>
         <Row>
@@ -29,10 +29,10 @@ const Footer = () => {
             <FooterLink href="#">hacettepe cs</FooterLink>
           </Column>
           <Column>
-            <Heading>Social Media</Heading>
+            <Heading>source</Heading>
             <FooterLink href="#">
               <i className="fab fa-youtube">
-                <span style={{ marginLeft: "10px" }}>Youtube</span>
+                <span style={{ marginLeft: "10px" }}>Github</span>
               </i>
             </FooterLink>
           </Column>
