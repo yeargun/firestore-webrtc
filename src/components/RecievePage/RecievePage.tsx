@@ -15,6 +15,7 @@ import { Button } from "@mui/material";
 import { humanFileSize, saveFile, fileDownloadPercentage } from "../../File";
 import { RTCconfig, firebaseConfig } from "../../Config";
 import Header from "../Header/Header";
+import "./RecievePage.css";
 
 interface FileMetadata {
   name: string;
@@ -108,27 +109,31 @@ function RecievePage() {
       {fileMetadata.size === 0 ? (
         <br />
       ) : (
-        <p>
+        <p className="wannaDownload">
           Wanna download the file <b>{fileMetadata?.name}</b> which has
           <b> {humanFileSize(fileMetadata?.size)}</b> size ?
         </p>
       )}
-      <Button
+      <button
+        className="yesButton"
         onClick={() => {
           answerTransfer(pc, db, currUrlPath);
         }}
       >
         yes
-      </Button>
+      </button>
 
-      <h3>File download percentage {downloadPercetange}%</h3>
-      <Button
+      <h3 className="uploadPercentageRecieve">
+        File download percentage {downloadPercetange}%
+      </h3>
+      <button
+        className="saveFileButton"
         onClick={() => {
           saveFile(fileMetadata, buffer);
         }}
       >
         Save File
-      </Button>
+      </button>
     </>
   );
 }

@@ -110,7 +110,6 @@ function SendPage() {
   sendChannel.addEventListener("close", onSendChannelClosed);
 
   const uploadFiles = () => {
-    const fileReader = new FileReader();
     console.log("tobeuploadedfiles", toBeUploadedFiles);
     toBeUploadedFiles.forEach((file) => {
       readFile(file).then((fileArrayBuffer: any) => {
@@ -153,6 +152,7 @@ function SendPage() {
           </Button>
         </div> */}
         <button
+          className="shareFileButton"
           onClick={async () => {
             createOffer(pc, db, toBeUploadedFiles).then((urlKey) => {
               setShareKey("urlKey");
@@ -170,7 +170,7 @@ function SendPage() {
               <h2>
                 Share the link: {window.location.href}recieve/{urlKey}
               </h2>
-              <h3 className="uploadPercentage">
+              <h3 className="uploadPercentageSend">
                 Upload percentage {uploadPercentage}%
               </h3>
             </>

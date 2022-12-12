@@ -18,19 +18,19 @@ const Footer = () => {
         <Row>
           <Column>
             <Heading>About Us</Heading>
-            <FooterLink href="#">Aim</FooterLink>
+            <FooterLink href="">Aim</FooterLink>
           </Column>
           <Column>
             <Heading>Services</Heading>
-            <FooterLink href="#">webrtc 👍🏻</FooterLink>
+            <FooterLink href="">webrtc 👍🏻</FooterLink>
           </Column>
           <Column>
             <Heading>Contact Us</Heading>
-            <FooterLink href="#">hacettepe cs</FooterLink>
+            <FooterLink href="">hacettepe cs</FooterLink>
           </Column>
           <Column>
             <Heading>source</Heading>
-            <FooterLink href="#">
+            <FooterLink href="">
               <i className="fab fa-youtube">
                 <span style={{ marginLeft: "10px" }}>Github</span>
               </i>
