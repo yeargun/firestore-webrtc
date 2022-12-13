@@ -18,7 +18,7 @@
 .saveFileButton {
   position: absolute;
   left: 50%;
-  top: 35%;
+  top: 40%;
   transform: translateX(-50%);
   transition-duration: 0.4s;
   background-color: white;
