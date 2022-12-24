@@ -47,8 +47,6 @@ const answerTransfer = async (
   const senderFileShareData = (await getDoc(callDoc)).data();
   const senderFileShareOfferData = senderFileShareData?.offer;
 
-  console.log("senderSDP ->", senderFileShareData);
-
   await pc.setRemoteDescription(
     new RTCSessionDescription(senderFileShareOfferData)
   );
@@ -65,7 +63,6 @@ const answerTransfer = async (
 
   onSnapshot(offerCandidatesRef, (doc) => {
     doc.docChanges().forEach((change) => {
-      console.log(change);
       if (change.type === "added") {
         const data = change.doc.data();
         pc.addIceCandidate(new RTCIceCandidate(data));

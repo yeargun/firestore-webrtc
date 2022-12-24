@@ -20,7 +20,6 @@ import {
 } from "../../Config";
 import Header from "../Header/Header";
 import "./SendPage.css";
-import ClipboardJS from "clipboard";
 
 const pc = new RTCPeerConnection(RTCconfig);
 const sendChannel = pc.createDataChannel("sendDataChannel", dataChannelOptions);
@@ -67,8 +66,6 @@ const createOffer = async (
   // Listen for remote answer
   onSnapshot(callDoc, (doc) => {
     const data = doc.data();
-    console.log("doc.data()", data);
-    console.log("answered fr");
     if (!pc.currentRemoteDescription && data?.answer) {
       const answerDescription = new RTCSessionDescription(data.answer);
       pc.setRemoteDescription(answerDescription);
@@ -93,24 +90,18 @@ function SendPage() {
   const [uploadPercentage, setUploadPercentage] = useState(0);
 
   const onSendChannelOpen = () => {
-    console.log("Send channel is open");
     uploadFiles();
-    sendChannel.addEventListener("bufferedamountlow", (e) => {
-      console.log("BufferedAmountLow event:", e);
-    });
+    sendChannel.addEventListener("bufferedamountlow", (e) => {});
   };
 
   const onSendChannelClosed = () => {
-    console.log("Send channel is closed");
     pc.close();
-    console.log("Closed local peer connection");
   };
 
   sendChannel.addEventListener("open", onSendChannelOpen);
   sendChannel.addEventListener("close", onSendChannelClosed);
 
   const uploadFiles = () => {
-    console.log("tobeuploadedfiles", toBeUploadedFiles);
     toBeUploadedFiles.forEach((file) => {
       readFile(file).then((fileArrayBuffer: any) => {
         const totalChunks = fileArrayBuffer.byteLength / CHUNK_SIZE;
