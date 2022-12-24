@@ -20,6 +20,7 @@ import {
 } from "../../Config";
 import Header from "../Header/Header";
 import "./SendPage.css";
+import clipboardImg from "../../assets/copy.png";
 
 const pc = new RTCPeerConnection(RTCconfig);
 const sendChannel = pc.createDataChannel("sendDataChannel", dataChannelOptions);
@@ -165,7 +166,7 @@ function SendPage() {
                   }}
                   draggable="false"
                   className="clipboardImg"
-                  src="src\assets\copy.png"
+                  src={clipboardImg}
                   alt="copy2clipboard"
                 />
               </div>

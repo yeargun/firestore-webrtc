@@ -70,5 +70,6 @@
 }
 
 .shareLink {
+  white-space: nowrap;
   padding-right: 1%;
 }
