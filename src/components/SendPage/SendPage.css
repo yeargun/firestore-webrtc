@@ -29,7 +29,46 @@
 }
 
 .uploadPercentageSend {
+  white-space: nowrap;
+
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
+}
+
+.linkGroup {
+  position: absolute;
+  top: 35%;
+  padding-left: 1em;
+  padding-right: 1.2em;
+  height: 2.5em;
+  border-radius: 1em;
+
+  background-color: rgb(235, 235, 235);
+
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.verticalLine {
+  border-left: 0.1em solid rgb(142, 142, 142);
+  height: 34px;
+  padding-right: 0.7em;
+}
+
+.clipboardImg {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  width: 18px;
+  height: 18px;
+}
+
+.shareLink {
+  padding-right: 1%;
 }

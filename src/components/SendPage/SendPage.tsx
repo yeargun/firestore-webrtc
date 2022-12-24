@@ -20,6 +20,7 @@ import {
 } from "../../Config";
 import Header from "../Header/Header";
 import "./SendPage.css";
+import ClipboardJS from "clipboard";
 
 const pc = new RTCPeerConnection(RTCconfig);
 const sendChannel = pc.createDataChannel("sendDataChannel", dataChannelOptions);
@@ -126,6 +127,10 @@ function SendPage() {
     setToBeUploadedFiles([]);
   };
 
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(window.location.href + "recieve/" + urlKey);
+  };
+
   return (
     <>
       <Header />
@@ -153,9 +158,26 @@ function SendPage() {
         <div className="FileUploadDetails">
           {urlKey && (
             <>
-              <h2>
-                Share the link: {window.location.href}recieve/{urlKey}
-              </h2>
+              <div className="linkGroup">
+                <h2
+                  className="shareLink"
+                  onClick={() => {
+                    copyToClipboard();
+                  }}
+                >
+                  {window.location.href}recieve/{urlKey}
+                </h2>
+                <div className="verticalLine"></div>
+                <img
+                  onClick={() => {
+                    copyToClipboard();
+                  }}
+                  draggable="false"
+                  className="clipboardImg"
+                  src="src\assets\copy.png"
+                  alt="copy2clipboard"
+                />
+              </div>
               <h3 className="uploadPercentageSend">
                 Upload percentage {uploadPercentage}%
               </h3>

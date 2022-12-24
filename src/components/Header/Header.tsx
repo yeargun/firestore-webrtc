@@ -3,7 +3,7 @@ import "./Header.css";
 function Header() {
   return (
     <>
-      <h1>Send Secure</h1>
+      <h1 className="brandName">Send Secure</h1>
       <hr />
     </>
   );
