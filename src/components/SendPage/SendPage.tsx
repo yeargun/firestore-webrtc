@@ -31,7 +31,8 @@ const db = getFirestore(app);
 let urlKey = "";
 
 const createSecureKey = () => {
-  return Math.floor(Math.random() * 10000).toString();
+  // mad security
+  return Math.floor(Math.random() * 800000).toString();
 };
 
 const createOffer = async (

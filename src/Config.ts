@@ -1,12 +1,12 @@
+// YOUR FIRESTORE CREDENTIALS
 export const firebaseConfig = {
-  apiKey: "AIzaSyC7u3rcfvvdWkDEU4sqdVvsq9kbNtEv9vU",
-  authDomain: "sendstuf-a62cc.firebaseapp.com",
-  databaseURL:
-    "https://sendstuf-a62cc-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "sendstuf-a62cc",
-  storageBucket: "sendstuf-a62cc.appspot.com",
-  messagingSenderId: "971673330562",
-  appId: "1:971673330562:web:5b9011c1f81397fbd9a59b",
+  apiKey: "x",
+  authDomain: "x.firebaseapp.com",
+  databaseURL: "https://x.europe-west1.firebasedatabase.app",
+  projectId: "x",
+  storageBucket: "x",
+  messagingSenderId: "x",
+  appId: "x",
   measurementId: "G-78MB2RBS4L",
 };
 
