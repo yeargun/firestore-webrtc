@@ -1,0 +1,28 @@
+.iconWrapper {
+  display: inline-flex;
+  min-width: 2.5em;
+  padding: 0.5em;
+  width: auto;
+  border-radius: 0.5em;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid rgb(0, 0, 0);
+  margin: 0.5em;
+  text-decoration: none;
+}
+
+.iconWrapper:hover {
+  background-color: rgba(105, 105, 105, 0.347);
+}
+
+.copy-success-message {
+  user-select: none;
+  color: black;
+  margin-left: 2px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.copy-success-message:hover {
+  color: black;
+}

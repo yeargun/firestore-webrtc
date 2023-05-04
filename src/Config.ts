@@ -1,15 +1,3 @@
-// YOUR FIRESTORE CREDENTIALS
-export const firebaseConfig = {
-  apiKey: "x",
-  authDomain: "x.firebaseapp.com",
-  databaseURL: "https://x.europe-west1.firebasedatabase.app",
-  projectId: "x",
-  storageBucket: "x",
-  messagingSenderId: "x",
-  appId: "x",
-  measurementId: "G-78MB2RBS4L",
-};
-
 export const RTCconfig = {
   iceServers: [
     {

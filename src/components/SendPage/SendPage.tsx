@@ -1,107 +1,174 @@
-import { initializeApp } from "firebase/app";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  doc,
-  setDoc,
-  onSnapshot,
-  Firestore,
-} from "firebase/firestore";
-
+import { MESSAGE, env } from "send-secure";
+import QRCode from "qrcode.react";
+import axios from "axios";
+import { remToPx } from "../../utils.js";
 import { DropzoneArea } from "material-ui-dropzone";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { readFile } from "../../File";
-import {
-  CHUNK_SIZE,
-  RTCconfig,
-  firebaseConfig,
-  dataChannelOptions,
-} from "../../Config";
+import { CHUNK_SIZE, RTCconfig, dataChannelOptions } from "../../Config";
 import Header from "../Header/Header";
 import "./SendPage.css";
-import clipboardImg from "../../assets/copy.png";
-
+import { useHref } from "react-router-dom";
+import Share from "../Share";
 const pc = new RTCPeerConnection(RTCconfig);
 const sendChannel = pc.createDataChannel("sendDataChannel", dataChannelOptions);
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-let urlKey = "";
-
-const createSecureKey = () => {
-  // mad security
-  return Math.floor(Math.random() * 800000).toString();
-};
-
-const createOffer = async (
-  pc: RTCPeerConnection,
-  db: Firestore,
-  fileList: File[]
-) => {
-  urlKey = createSecureKey();
-  const callDoc = doc(db, "calls", urlKey);
-  const offerCandidatesRef = collection(callDoc, "offerCandidates");
-  const answerCandidatesRef = collection(callDoc, "answerCandidates");
-
-  pc.onicecandidate = (event) => {
-    event.candidate && addDoc(offerCandidatesRef, event.candidate.toJSON());
-  };
-
-  const offerDescription = await pc.createOffer();
-  await pc.setLocalDescription(offerDescription);
-
-  const offer = {
-    sdp: offerDescription.sdp,
-    type: offerDescription.type,
-  };
-
-  const metadata = {
-    name: fileList[0].name,
-    size: fileList[0].size,
-    type: fileList[0].type,
-  };
-
-  setDoc(callDoc, { offer, metadata });
-
-  // Listen for remote answer
-  onSnapshot(callDoc, (doc) => {
-    const data = doc.data();
-    if (!pc.currentRemoteDescription && data?.answer) {
-      const answerDescription = new RTCSessionDescription(data.answer);
-      pc.setRemoteDescription(answerDescription);
-      return urlKey;
-    }
-  });
-
-  // When answered, add candidate to peer connection
-  onSnapshot(answerCandidatesRef, (doc) => {
-    doc.docChanges().forEach((change) => {
-      if (change.type === "added") {
-        const candidate = new RTCIceCandidate(change.doc.data());
-        pc.addIceCandidate(candidate);
-      }
-    });
-  });
+const shareButtonStyles = {
+  background: "black",
+  fontSize: "1.5rem",
 };
 
 function SendPage() {
+  const wsConnectionRef = useRef(null);
   const [toBeUploadedFiles, setToBeUploadedFiles] = useState<File[]>([]);
-  const [shareKey, setShareKey] = useState<string>("");
   const [uploadPercentage, setUploadPercentage] = useState(0);
+  const [uuid, setUuid] = useState(null);
+  const [receiver, setReceiver] = useState(null);
+  // #
+  const basename = useHref("/");
+
+  console.log("basename this", basename);
+  // # listen for remote answer
+  const senderMessageHandler = async (message) => {
+    const data = JSON.parse(message.data);
+    console.log(data);
+    switch (data.type) {
+      case MESSAGE.RECEIVER.CONNECTION_REQUEST:
+        console.log(
+          "Connection request received. Receiver info:",
+          data.receiver
+        );
+        setReceiver(data.receiver);
+        sendOfferWhenRecieverConnected(toBeUploadedFiles);
+        break;
+      case MESSAGE.RECEIVER.ANSWER:
+        const answerDescription = new RTCSessionDescription(data.answer);
+        await pc.setRemoteDescription(answerDescription);
+        console.log("Answer received");
+        break;
+      default:
+        break;
+    }
+  };
+
+  const sendOfferWhenRecieverConnected = async (fileList: File[]) => {
+    console.log("dd ", wsConnectionRef.current);
+
+    if (wsConnectionRef.current) {
+      console.log("ws conn is open");
+      pc.onicecandidate = (event) => {
+        event.candidate &&
+          wsConnectionRef.current.send(
+            JSON.stringify({
+              type: MESSAGE.SENDER.CANDIDATE,
+              candidate: event.candidate,
+            })
+          );
+      };
+
+      const offerDescription = await pc.createOffer();
+      await pc.setLocalDescription(offerDescription);
+
+      const offer = {
+        sdp: offerDescription.sdp,
+        type: offerDescription.type,
+      };
+
+      const metadata = {
+        name: fileList[0].name,
+        size: fileList[0].size,
+        type: fileList[0].type,
+      };
+      console.log("offer this", offer);
+
+      wsConnectionRef.current.send(
+        JSON.stringify({
+          type: MESSAGE.SENDER.OFFER,
+          offer,
+          metadata,
+        })
+      );
+    }
+  };
+
+  const getUuid = async () => {
+    try {
+      const res = await axios.post(`https://${env.SIGNALING_SERVER}/uuid`);
+      const resUuid = res.data.uuid;
+      setUuid(resUuid);
+      console.log("got this uuid", resUuid);
+      return resUuid;
+    } catch (error) {
+      console.log(error);
+      return undefined;
+    }
+  };
+
+  const createWebSocket = async (pc: RTCPeerConnection) => {
+    const createdUuid = await getUuid();
+    console.log("res uiid", createdUuid);
+    let wsConnection = new WebSocket(
+      `wss://${env.SIGNALING_SERVER}/send/${createdUuid}`
+    );
+    wsConnectionRef.current = wsConnection;
+
+    console.log(
+      `Connected to wss://${env.SIGNALING_SERVER}/send/${createdUuid}`
+    );
+    wsConnectionRef.current.onmessage = senderMessageHandler;
+  };
+
+  const shareLink = `https://${window.location.host}${basename}receive/${uuid}`;
 
   const onSendChannelOpen = () => {
+    console.log("uploading files atm");
+    // uploadFile2(toBeUploadedFiles[0]);
     uploadFiles();
     sendChannel.addEventListener("bufferedamountlow", (e) => {});
   };
 
   const onSendChannelClosed = () => {
+    console.log("Send channel is closed");
     pc.close();
   };
 
   sendChannel.addEventListener("open", onSendChannelOpen);
   sendChannel.addEventListener("close", onSendChannelClosed);
+
+  const uploadFile2 = async (tobeUploaded) => {
+    // Set the chunk size to 64 KB (can be adjusted based on the application's needs)
+    const chunkSize = 64 * 1024;
+
+    // Calculate the total number of chunks for the file
+    const numChunks = Math.ceil(tobeUploaded.size / chunkSize);
+
+    // Send the file name and size as the first message
+    sendChannel.send(
+      JSON.stringify({ name: tobeUploaded.name, size: tobeUploaded.size })
+    );
+
+    // Loop through each chunk and send it over the data channel
+    for (let i = 0; i < numChunks; i++) {
+      // Calculate the byte offset for the current chunk
+      const offset = i * chunkSize;
+
+      // Read the chunk from the file
+      const chunk = await tobeUploaded
+        .slice(offset, offset + chunkSize)
+        .arrayBuffer();
+
+      // Send the chunk over the data channel
+      sendChannel.send(chunk);
+
+      // If the confirmation is not received, retransmit the chunk
+      if (sendChannel.readyState !== "open") {
+        i--; // retry sending the same chunk
+      }
+    }
+
+    // Once all the chunks have been sent and received successfully, the file transfer is complete
+    console.log("File transfer complete");
+  };
 
   const uploadFiles = () => {
     toBeUploadedFiles.forEach((file) => {
@@ -120,12 +187,8 @@ function SendPage() {
     setToBeUploadedFiles([]);
   };
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(window.location.href + "recieve/" + urlKey);
-  };
-
   return (
-    <>
+    <div className="page">
       <Header />
       <div className="container">
         <DropzoneArea
@@ -135,50 +198,29 @@ function SendPage() {
           onChange={setToBeUploadedFiles}
           maxFileSize={2147483648}
         />
+        <h3 className="uploadPercentageSend">
+          Upload percentage {uploadPercentage}%
+        </h3>
         <button
           className="shareFileButton"
           onClick={async () => {
-            createOffer(pc, db, toBeUploadedFiles).then((urlKey) => {
-              setShareKey("urlKey");
-            });
+            await createWebSocket(pc);
           }}
         >
           create a share link
         </button>
-
-        <br />
-        <br />
         <div className="FileUploadDetails">
-          {urlKey && (
+          {uuid && (
             <>
-              <div className="linkGroup">
-                <h2
-                  className="shareLink"
-                  onClick={() => {
-                    copyToClipboard();
-                  }}
-                >
-                  {window.location.href}recieve/{urlKey}
-                </h2>
-                <div className="verticalLine"></div>
-                <img
-                  onClick={() => {
-                    copyToClipboard();
-                  }}
-                  draggable="false"
-                  className="clipboardImg"
-                  src={clipboardImg}
-                  alt="copy2clipboard"
-                />
+              <div className="qrCodeWrapper">
+                <QRCode size={remToPx(13)} value={shareLink} />
               </div>
-              <h3 className="uploadPercentageSend">
-                Upload percentage {uploadPercentage}%
-              </h3>
+              <Share style={shareButtonStyles} link={shareLink} />
             </>
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

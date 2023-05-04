@@ -1,9 +1,12 @@
 import "./Header.css";
 
 function Header() {
+  const homePageLink = location.protocol + "//" + location.host;
   return (
     <>
-      <h1 className="brandName">Send Secure</h1>
+      <a className="sendSecure" href={homePageLink}>
+        Send Secure
+      </a>
       <hr />
     </>
   );
